@@ -59,6 +59,7 @@ export default {
                 fill: true
               },
               
+
               {
                 label: 'Charges',
                 data: expenses,

@@ -126,6 +126,7 @@ onMounted(async () => {
         console.error('Erreur API:', err.response ? err.response.data : err.message);
     }
 });
+
 </script>
 
 <template>
