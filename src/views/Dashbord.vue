@@ -58,6 +58,7 @@ export default {
                 tension: 0.3,
                 fill: true
               },
+              
               {
                 label: 'Charges',
                 data: expenses,
