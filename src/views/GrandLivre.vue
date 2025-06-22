@@ -116,7 +116,7 @@ const grandLivreTotals = computed(() => {
 });
 
 onMounted(async () => {
-    try {
+    try  {
         const grandLivreResponse = await journalService.getGrandLivre();
         const rawResponse = grandLivreResponse || [];
         grandLivre.value = rawResponse;
