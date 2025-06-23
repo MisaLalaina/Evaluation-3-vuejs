@@ -226,7 +226,7 @@ onMounted(async () => {
             <div v-if="error" class="error">{{ error }}</div>
 
             <!-- Tableau de la balance -->
-            <table v-if="Object.keys(balanceData).length" border="1">
+            <table v-if="Object.keys(balanceData).length" class="table table-bordered">
                 <thead>
                     <tr>
                         <th>Compte</th>
@@ -261,8 +261,15 @@ onMounted(async () => {
             <!-- Modale pour le grand livre du compte -->
             <div v-if="showModal" class="modal-overlay">
                 <div class="modal-content">
-                    <h2>Grand Livre : {{ selectedAccount }}</h2>
-                    <table v-if="accountLines.length" border="1">
+                    <div class="row">
+                        <div class="col">
+                            <h2>Grand Livre : {{ selectedAccount }}</h2>
+                        </div>
+                        <div class="col-2 text-end">
+                            <button @click="closeModal" class="btn btn-danger">X</button>
+                        </div>
+                    </div>
+                    <table v-if="accountLines.length" class="table table-bordered">
                         <thead>
                             <tr>
                                 <th>Date</th>
@@ -293,7 +300,7 @@ onMounted(async () => {
                         </tfoot>
                     </table>
                     <div v-else class="no-data">Aucune transaction pour ce compte avec les filtres sélectionnés.</div>
-                    <button @click="closeModal" class="close-button">Fermer</button>
+                    
                 </div>
             </div>
         </div>
@@ -374,13 +381,16 @@ tfoot {
 }
 
 .account-link {
-    color: #007bff;
+    color: rgb(3, 57, 3);
     text-decoration: none;
     cursor: pointer;
+    font-weight: 700;
 }
 
 .account-link:hover {
     text-decoration: underline;
+    color: rgba(3, 57, 3,0.7);
+
 }
 
 
