@@ -58,7 +58,7 @@ export default {
                 tension: 0.3,
                 fill: true
               },
-              
+
 
               {
                 label: 'Charges',
@@ -109,7 +109,7 @@ export default {
     const formatCurrency = (value) => {
       return new Intl.NumberFormat('fr-FR', {
         style: 'currency',
-        currency: 'EUR',
+        currency: 'MGA',
         maximumFractionDigits: 0
       }).format(value);
     };
@@ -137,44 +137,64 @@ export default {
 
 
 <template>
-   
-  <div class="dashboard">
-    <h2>Dashboard Financier</h2>
-
-    <div class="controls">
-      <label>Année: </label>
-      <input type="number" v-model.number="selectedYear" @change="loadData" min="2020"
-        :max="new Date().getFullYear()" />
-      <button @click="loadData">Rafraîchir</button>
+  <div class="row h-100">
+    <div class="col-2 bg-light">
+          <div class="container mt-3" id="navbarNav">
+              <ul class="navbar-nav">
+                  <li class="nav-item">
+                      <router-link to="/balance" class="nav-link">Balance</router-link>
+                  </li>
+                  <li class="nav-item">
+                      <router-link to="/grandLivre" class="nav-link">Grand Livre</router-link>
+                  </li>
+                  <li class="nav-item">
+                      <router-link to="/dashboard" class="nav-link">Dashboard</router-link>
+                  </li>
+                  <li class="nav-item">
+                      <router-link to="/import" class="nav-link">Import</router-link>
+                  </li>
+              </ul>
+          </div>
     </div>
 
-    <!-- Nouveau graphique -->
-    <div class="chart-container">
-      <canvas ref="chartCanvas"></canvas>
+    <div class="dashboard col-10 p-4">
+      <h2>Dashboard Financier</h2>
+
+      <div class="controls">
+        <label>Année: </label>
+        <input type="number" v-model.number="selectedYear" @change="loadData" min="2020"
+          :max="new Date().getFullYear()" />
+        <button @click="loadData">Rafraîchir</button>
+      </div>
+
+      <!-- Nouveau graphique -->
+      <div class="chart-container">
+        <canvas ref="chartCanvas"></canvas>
+      </div>
+
+      <table v-if="!loading">
+        <thead>
+          <tr>
+            <th>Mois</th>
+            <th>Chiffre d'affaires</th>
+            <th>Charges</th>
+            <th>Résultat</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(data, index) in financialData" :key="index">
+            <td>{{ getMonthName(data.month) }}</td>
+            <td>{{ formatCurrency(data.revenue) }}</td>
+            <td>{{ formatCurrency(data.expenses) }}</td>
+            <td :class="{ positive: data.netResult > 0, negative: data.netResult < 0 }">
+              {{ formatCurrency(data.netResult) }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div v-else class="loading">Chargement en cours...</div>
     </div>
-
-    <table v-if="!loading">
-      <thead>
-        <tr>
-          <th>Mois</th>
-          <th>Chiffre d'affaires</th>
-          <th>Charges</th>
-          <th>Résultat</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(data, index) in financialData" :key="index">
-          <td>{{ getMonthName(data.month) }}</td>
-          <td>{{ formatCurrency(data.revenue) }}</td>
-          <td>{{ formatCurrency(data.expenses) }}</td>
-          <td :class="{ positive: data.netResult > 0, negative: data.netResult < 0 }">
-            {{ formatCurrency(data.netResult) }}
-          </td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div v-else class="loading">Chargement en cours...</div>
   </div>
 </template>
 

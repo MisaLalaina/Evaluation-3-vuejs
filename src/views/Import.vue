@@ -1,103 +1,117 @@
 <template>
-    <nav class="navbar">
-        <div class="navbar-links">
-            <router-link to="/balance">
-                <span>Balance</span>
-            </router-link>
-            <router-link to="/grandLivre">
-                <span>GrandLivre</span>
-            </router-link>
-            <router-link to="/dashboard">
-                <span>Dashboard</span>
-            </router-link>
-            <router-link to="/import">
-                <span>Import</span>
-            </router-link>
-        </div>
-    </nav>
-    <div>
-        <h1>Import</h1>
-        <form @submit.prevent="importerFichiers">
-            <div class="form-group">
-                <label for="compteFileInput">Import Compte (fichier 2) :</label>
-                <input type="file" id="compteFileInput" accept=".csv" @change="handleCompteChange" /><br />
-
-                <label for="ecritureFileInput">Import Écriture (fichier 1) :</label>
-                <input type="file" id="ecritureFileInput" accept=".csv" @change="handleEcritureChange" /><br />
+    <div class="row h-100">
+        <div class="col-2 bg-light">
+            <div class="container mt-3" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <router-link to="/balance" class="nav-link">Balance</router-link>
+                    </li>
+                    <li class="nav-item">
+                        <router-link to="/grandLivre" class="nav-link">Grand Livre</router-link>
+                    </li>
+                    <li class="nav-item">
+                        <router-link to="/dashboard" class="nav-link">Dashboard</router-link>
+                    </li>
+                    <li class="nav-item">
+                        <router-link to="/import" class="nav-link">Import</router-link>
+                    </li>
+                </ul>
             </div>
-            <button type="submit">Importer</button>
-        </form>
-
-        <div v-if="compteData.length" class="preview">
-            <h2>Données Compte</h2>
-            <table border="1">
-                <thead>
-                    <tr>
-                        <th v-for="(value, key) in compteData[0]" :key="key">
-                            {{ key }}
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="(row, index) in compteData" :key="index"
-                        :style="{ backgroundColor: !!row.existeDeja ? 'red' : 'inherit' }">
-                        <td v-for="(value, key) in row" :key="key">
-                            {{ value }}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
         </div>
+        <div class="col-10 p-4">
+            <h1>Import</h1>
+            <form @submit.prevent="importerFichiers">
+                <div class="form-group row">
+                    <div class="col-auto">
+                        <label for="compteFileInput">Import Compte (fichier 2) :</label>
+                    </div>
+                    <div class="col-4">
+                        <input type="file" class="form-control" id="compteFileInput" accept=".csv" @change="handleCompteChange" /><br />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-auto">
+                        <label for="ecritureFileInput">Import Écriture (fichier 1) :</label>
+                    </div>
+                    <div class="col-4">
+                        <input type="file" class="form-control" id="ecritureFileInput" accept=".csv" @change="handleEcritureChange" /><br />
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success">Importer</button>
+            </form>
 
-        <div v-if="ecritureData.length" class="preview">
-            <h2>Données Écriture</h2>
-            <table border="1">
-                <thead>
-                    <tr>
-                        <th v-for="(value, key) in ecritureData[0]" :key="key">
-                            {{ key }}
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="(row, index) in ecritureData" :key="index"
-                        :style="{ backgroundColor: !!row.dateValide ? 'inherit' : 'red' }">
-                        <td v-for="(value, key) in row" :key="key">
-                            {{ value }}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+            <div v-if="compteData.length" class="preview">
+                <h2>Données Compte</h2>
+                <table border="1">
+                    <thead>
+                        <tr>
+                            <th v-for="(value, key) in compteData[0]" :key="key">
+                                {{ key }}
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(row, index) in compteData" :key="index"
+                            :style="{ backgroundColor: !!row.existeDeja ? 'red' : 'inherit' }">
+                            <td v-for="(value, key) in row" :key="key">
+                                {{ value }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
-        <button v-if="ecritureData.length" type="button" @click="validData">
-            Valider
-        </button>
+            <div v-if="ecritureData.length" class="preview">
+                <h2>Données Écriture</h2>
+                <table border="1">
+                    <thead>
+                        <tr>
+                            <th v-for="(value, key) in ecritureData[0]" :key="key">
+                                {{ key }}
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(row, index) in ecritureData" :key="index"
+                            :style="{ backgroundColor: !!row.dateValide ? 'inherit' : 'red' }">
+                            <td v-for="(value, key) in row" :key="key">
+                                {{ value }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
-        <!-- <div class="tooltip-container" style="position: relative; display: inline-block;">
-            <button v-if="ecritureData.length" type="button" @click="validData" :disabled="validationBloquee"
-                @mouseover="showTooltip = validationBloquee" @mouseleave="showTooltip = false">
+            <button v-if="ecritureData.length" type="button" @click="validData">
                 Valider
             </button>
 
-            <div v-if="validationBloquee && showTooltip" class="tooltip-message" style="
-      position: absolute;
-      bottom: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: #f44336;
-      color: white;
-      padding: 6px 10px;
-      border-radius: 4px;
-      white-space: nowrap;
-      font-size: 13px;
-      margin-bottom: 4px;
-      z-index: 10;
-    ">
-                Corriger les erreurs des données <br> pour valider les données
-            </div>
-        </div> -->
+            <!-- <div class="tooltip-container" style="position: relative; display: inline-block;">
+                <button v-if="ecritureData.length" type="button" @click="validData" :disabled="validationBloquee"
+                    @mouseover="showTooltip = validationBloquee" @mouseleave="showTooltip = false">
+                    Valider
+                </button>
+
+                <div v-if="validationBloquee && showTooltip" class="tooltip-message" style="
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #f44336;
+        color: white;
+        padding: 6px 10px;
+        border-radius: 4px;
+        white-space: nowrap;
+        font-size: 13px;
+        margin-bottom: 4px;
+        z-index: 10;
+        ">
+                    Corriger les erreurs des données <br> pour valider les données
+                </div>
+            </div> -->
+        </div>
     </div>
+
 </template>
   
 <script setup>

@@ -10,9 +10,9 @@ const dateMax = ref(null);
 const referenceFilter = ref('');
 
 const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('fr-FR', {
         style: 'currency',
-        currency: 'USD',
+        currency: 'MGA',
     }).format(amount || 0);
 };
 
