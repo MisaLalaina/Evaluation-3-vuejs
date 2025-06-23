@@ -218,6 +218,9 @@ onMounted(async () => {
                     <li class="nav-item">
                         <router-link to="/import" class="nav-link">Import</router-link>
                     </li>
+                      <li class="nav-item">
+                        <router-link to="/Ecriture" class="nav-link">Saisie d' ecrituire</router-link>
+                    </li>
                 </ul>
             </div>
         </div>

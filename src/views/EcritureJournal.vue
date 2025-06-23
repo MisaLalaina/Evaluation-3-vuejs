@@ -1,198 +1,209 @@
 <template>
-    <h1>Saisie Écriture Comptable</h1>
-    <form @submit.prevent="traiterCreation">
-        <div class="groupe-formulaire">
-            <label for="compte">Compte *</label>
-            <select name="compte" id="compte" v-model="compte" required>
-                <option disabled value="">Sélectionnez un compte</option>
-                <option v-for="compte in comptes" :key="compte.id" :value="compte">
-                    {{ compte.Value }}
+    <navbar />
+    <div class="form-container">
+        <h1>Formulaire Comptable</h1>
+        <div class="form-group">
+            <label for="compte">Compte <span class="required">*</span></label>
+            <select v-model="form.compte" id="compte" :disabled="loading" @change="clearError('compte')">
+                <option value="" disabled>Sélectionnez un compte</option>
+                <option v-for="compte in comptes" :key="compte.C_ElementValue_ID || compte.id" :value="compte">
+                    {{ compte.Value || 'N/A' }} - {{ compte.Name || 'Sans nom' }}
                 </option>
             </select>
+            <span class="error" v-if="errors.compte">{{ errors.compte }}</span>
         </div>
-
-        <div class="groupe-formulaire">
-            <label for="journal">Journal *</label>
-            <select name="journal" id="journal" v-model="journal" required>
-                <option disabled value="">Sélectionnez un journal</option>
-                <option v-for="journal in journals" :key="journal.id" :value="journal">
-                    {{ journal.Description }}
-                </option>
-            </select>
+        <div class="form-group">
+            <label for="date">Date <span class="required">*</span></label>
+            <input v-model="form.date" type="date" id="date" :disabled="loading" @input="clearError('date')">
+            <span class="error" v-if="errors.date">{{ errors.date }}</span>
         </div>
-
-        <div class="groupe-formulaire">
-            <label for="date">Date *</label>
-            <input type="date" v-model="date" required />
+        <div class="form-group">
+            <label for="reference">Référence <span class="required">*</span></label>
+            <input v-model="form.reference" type="text" id="reference" :disabled="loading"
+                @input="clearError('reference')">
+            <span class="error" v-if="errors.reference">{{ errors.reference }}</span>
         </div>
-
-        <div class="groupe-formulaire">
+        <div class="form-group">
             <label for="debit">Débit</label>
-            <input type="number" v-model.number="debit" min="0" step="0.01" />
+            <input v-model.number="form.debit" type="number" id="debit" step="0.01" min="0" :disabled="loading"
+                @input="clearError('amount')">
+            <span class="error" v-if="errors.amount">{{ errors.amount }}</span>
         </div>
-
-        <div class="groupe-formulaire">
+        <div class="form-group">
             <label for="credit">Crédit</label>
-            <input type="number" v-model.number="credit" min="0" step="0.01" />
+            <input v-model.number="form.credit" type="number" id="credit" step="0.01" min="0" :disabled="loading"
+                @input="clearError('amount')">
+            <span class="error" v-if="errors.amount">{{ errors.amount }}</span>
         </div>
-
-        <button type="submit" :disabled="enCoursEnvoi">
-            {{ enCoursEnvoi ? 'Enregistrement en cours...' : 'Enregistrer' }}
+        <button @click="submitForm" :disabled="loading || !isFormValid">
+            {{ loading ? 'En cours...' : 'Soumettre' }}
         </button>
-        
-
-        <div v-if="messageErreur" class="message-erreur">{{ messageErreur }}</div>
-        <div v-if="messageSucces" class="message-succes">{{ messageSucces }}</div>
-    </form>
+        <p v-if="successMessage" class="success">{{ successMessage }}</p>
+    </div>
 </template>
 
-<script setup>
-import { ref, onMounted } from 'vue';
-import journalService from '@/services/journalService.js';
+<script>
 import compteService from '@/services/compteService.js';
+import journalService from '@/services/journalService.js';
+import apiClient from '@/services/api.js';
+import Navbar from '@/components/Navbar.vue';
 
-// Références réactives
-const journals = ref([]);
-const comptes = ref([]);
-const compte = ref(null);
-const journal = ref(null);
-const debit = ref(0);
-const date = ref(new Date().toISOString().split('T')[0]); // Date du jour par défaut
-const credit = ref(0);
-const enCoursEnvoi = ref(false);
-const messageErreur = ref('');
-const messageSucces = ref('');
 
-// Formater la date pour PostgreSQL
-function formaterDatePourPostgres(dateStr) {
-    // Le champ date HTML fournit déjà le format YYYY-MM-DD
-    return `${dateStr} 00:00:00`;
-}
 
-// Validation du formulaire
-const validerFormulaire = () => {
-    if (!compte.value || !journal.value || !date.value) {
-        return 'Tous les champs marqués d\'un * sont obligatoires';
-    }
-    
-    if (debit.value <= 0 && credit.value <= 0) {
-        return 'Vous devez saisir un montant au débit ou au crédit';
-    }
-    
-    if (debit.value > 0 && credit.value > 0) {
-        return 'Une écriture ne peut pas avoir à la fois un débit et un crédit';
-    }
-    
-    return null;
-};
-
-// Traitement de la création d'écriture
-const traiterCreation = async () => {
-    messageErreur.value = '';
-    messageSucces.value = '';
-    
-    const erreurValidation = validerFormulaire();
-    if (erreurValidation) {
-        messageErreur.value = erreurValidation;
-        return;
-    }
-
-    enCoursEnvoi.value = true;
-    
-    try {
-        const dateFormatee = formaterDatePourPostgres(date.value);
-        const donnees = {
-            credit: credit.value,
-            debit: debit.value,
-            date: dateFormatee
+export default {
+    name: 'SaisieEcriture',
+    components: {
+        Navbar
+    },
+    data() {
+        return {
+            form: {
+                compte: '',
+                date: '',
+                reference: '',
+                debit: 0,
+                credit: 0,
+            },
+            comptes: [],
+            loading: false,
+            errors: {
+                compte: '',
+                date: '',
+                reference: '',
+                amount: '',
+            },
+            successMessage: '',
         };
-        
-        // Appel au service pour créer la ligne de journal
-        await journalService.creerLigneJournal(
-            donnees, 
-            journal.value, 
-            compte.value,
-            // Générer un numéro de ligne unique (à adapter selon vos besoins)
-            Math.floor(Math.random() * 1000) + 1
-        );
-        
-        messageSucces.value = 'Écriture enregistrée avec succès !';
-        
-        // Réinitialisation des montants
-        debit.value = 0;
-        credit.value = 0;
-    } catch (erreur) {
-        console.error(erreur);
-        messageErreur.value = erreur.response?.data?.message || 'Erreur lors de l\'enregistrement de l\'écriture';
-    } finally {
-        enCoursEnvoi.value = false;
-    }
+    },
+    computed: {
+        isFormValid() {
+            return this.form.compte && this.form.date && this.form.reference && (this.form.debit > 0 || this.form.credit > 0);
+        },
+    },
+    async created() {
+        await this.fetchComptes();
+    },
+    methods: {
+        async journalExist(value) {
+            try {
+                const response = await apiClient.get(`/models/GL_Journal?$filter=Description eq '${value}' AND IsActive eq true`);
+                return response.records || [];
+            } catch (error) {
+                console.error('Erreur lors de la vérification du journal :', error);
+                return [];
+            }
+        },
+        async fetchComptes() {
+            try {
+                this.loading = true;
+                const comptes = await compteService.getAllComptes();
+                console.log('Comptes récupérés :', comptes);
+                this.comptes = comptes;
+                if (this.comptes.length === 0) {
+                    this.errors.compte = 'Aucun compte valide trouvé. Vérifiez les comptes dans iDempiere.';
+                    console.warn('Aucun compte chargé. Vérifiez la configuration iDempiere.');
+                }
+            } catch (error) {
+                console.error('Erreur lors de la récupération des comptes :', {
+                    message: error.message,
+                    stack: error.stack,
+                });
+                this.errors.compte = 'Erreur lors du chargement des comptes. Vérifiez la connexion à l\'API iDempiere.';
+            } finally {
+                this.loading = false;
+            }
+        },
+        async validateForm() {
+            this.errors = { compte: '', date: '', reference: '', amount: '' };
+            let isValid = true;
+
+            if (!this.form.compte) {
+                this.errors.compte = 'Veuillez sélectionner un compte.';
+                isValid = false;
+            }
+            if (!this.form.date) {
+                this.errors.date = 'Veuillez sélectionner une date.';
+                isValid = false;
+            }
+            if (!this.form.reference) {
+                this.errors.reference = 'Veuillez entrer une référence.';
+                isValid = false;
+            } else {
+                // Vérification de l'existence de la référence
+                const existingJournals = await this.journalExist(this.form.reference);
+                if (existingJournals.length > 0) {
+                    this.errors.reference = 'Un journal avec cette référence existe déjà.';
+                    isValid = false;
+                }
+            }
+            if (this.form.debit === 0 && this.form.credit === 0) {
+                this.errors.amount = 'Veuillez entrer un débit ou un crédit.';
+                isValid = false;
+            }
+            if (this.form.debit > 0 && this.form.credit > 0) {
+                this.errors.amount = 'Veuillez entrer soit un débit, soit un crédit, pas les deux.';
+                isValid = false;
+            }
+            if (this.form.debit < 0 || this.form.credit < 0) {
+                this.errors.amount = 'Les montants ne peuvent pas être négatifs.';
+                isValid = false;
+            }
+            if (!Number.isFinite(this.form.debit) || !Number.isFinite(this.form.credit)) {
+                this.errors.amount = 'Veuillez entrer des montants valides.';
+                isValid = false;
+            }
+
+            return isValid;
+        },
+        clearError(field) {
+            this.errors[field] = '';
+            this.successMessage = '';
+        },
+        async submitForm() {
+            const isValid = await this.validateForm();
+            if (!isValid) {
+                return;
+            }
+
+            this.loading = true;
+            this.successMessage = '';
+            try {
+                // Créer le journal
+                const journalData = {
+                    date: this.form.date,
+                    reference: this.form.reference,
+                };
+                const journalResponse = await journalService.createJournal(journalData);
+
+                // Créer la ligne de journal
+                const journalLineData = {
+                    date: this.form.date,
+                    debit: Number(this.form.debit) || 0,
+                    credit: Number(this.form.credit) || 0,
+                };
+                console.log(journalLineData);
+                const compte = {
+                    id: this.form.compte.C_ElementValue_ID || this.form.compte.id,
+                };
+                await journalService.createJournalLine1(journalLineData, journalResponse, compte, 10);
+
+                this.successMessage = 'Écriture comptable créée avec succès !';
+                this.form = { compte: '', date: '', reference: '', debit: 0, credit: 0 };
+            } catch (error) {
+                console.error('Erreur lors de la soumission :', {
+                    message: error.message,
+                    response: error.response ? error.response.data : null,
+                });
+                this.errors.amount = error.message.includes('Aucune période active')
+                    ? 'Aucune période comptable active pour la date sélectionnée.'
+                    : `Échec de la création de l'écriture : ${error.message}`;
+            } finally {
+                this.loading = false;
+            }
+        },
+    },
 };
-
-// Chargement initial des données
-onMounted(async () => {
-    try {
-        // Chargement en parallèle des journaux et comptes
-        const [reponseJournals, reponseComptes] = await Promise.all([
-            journalService.getGrandLivre(),
-            compteService.getCompte()
-        ]);
-        
-        journals.value = reponseJournals || [];
-        comptes.value = reponseComptes || [];
-    } catch (erreur) {
-        messageErreur.value = 'Erreur lors du chargement des données initiales';
-        console.error('Erreur API:', erreur);
-    }
-});
 </script>
-
 <style scoped>
-.groupe-formulaire {
-    margin-bottom: 1rem;
-}
 
-label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: bold;
-}
-
-input, select {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-button {
-    padding: 0.5rem 1rem;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1rem;
-}
-
-button:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-}
-
-.message-erreur {
-    color: #d32f2f;
-    margin-top: 1rem;
-    padding: 0.5rem;
-    background-color: #ffebee;
-    border-radius: 4px;
-}
-
-.message-succes {
-    color: #388e3c;
-    margin-top: 1rem;
-    padding: 0.5rem;
-    background-color: #e8f5e9;
-    border-radius: 4px;
-}
 </style>
