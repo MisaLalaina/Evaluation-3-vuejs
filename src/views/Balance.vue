@@ -10,11 +10,12 @@ const referenceFilter = ref('');
 const showModal = ref(false);
 const selectedAccount = ref(null);
 
-// Formater les montants en devise (USD)
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-FR', {
         style: 'currency',
         currency: 'MGA',
+        minimumFractionDigits: 2,  // Force 2 chiffres après la virgule
+        maximumFractionDigits: 2   // Bloque à 2 chiffres après la virgule
     }).format(amount || 0);
 };
 

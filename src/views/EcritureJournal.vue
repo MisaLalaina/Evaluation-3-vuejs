@@ -144,13 +144,13 @@ export default {
             if (!this.form.reference) {
                 this.errors.reference = 'Veuillez entrer une référence.';
                 isValid = false;
-            } else {
-                // Vérification de l'existence de la référence
-                const existingJournals = await this.journalExist(this.form.reference);
-                if (existingJournals.length > 0) {
-                    this.errors.reference = 'Un journal avec cette référence existe déjà.';
-                    isValid = false;
-                }
+            // } else {
+            //     // Vérification de l'existence de la référence
+            //     const existingJournals = await this.journalExist(this.form.reference);
+            //     if (existingJournals.length > 0) {
+            //         this.errors.reference = 'Un journal avec cette référence existe déjà.';
+            //         isValid = false;
+            //     }
             }
             if (this.form.debit === 0 && this.form.credit === 0) {
                 this.errors.amount = 'Veuillez entrer un débit ou un crédit.';
@@ -189,7 +189,16 @@ export default {
                     date: this.form.date,
                     reference: this.form.reference,
                 };
+                let journal
+                const existingJournals = await this.journalExist(this.form.reference);
+                if (existingJournals.length > 0) {
+                    journal=existingJournals[0]
+                    console.log(journal)
+                }else{
                 const journalResponse = await journalService.createJournal(journalData);
+                    journal=journalResponse
+                    console.log(journal)
+                }
 
                 // Créer la ligne de journal
                 const journalLineData = {
@@ -201,7 +210,7 @@ export default {
                 const compte = {
                     id: this.form.compte.C_ElementValue_ID || this.form.compte.id,
                 };
-                await journalService.createJournalLine1(journalLineData, journalResponse, compte, 10);
+                await journalService.createJournalLine1(journalLineData, journal, compte, 10);
 
                 this.successMessage = 'Écriture comptable créée avec succès !';
                 this.form = { compte: '', date: '', reference: '', debit: 0, credit: 0 };
