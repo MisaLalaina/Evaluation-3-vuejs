@@ -50,7 +50,6 @@ const createJournal = async (data) => {
 // mamorona journaline ho an' ilay formulaire d' insertion
 const createJournalLine1 = async (data, journal, compte, line) => {
   try {
-
     const journalline = {
       AD_Client_ID: 11,
       AD_Org_ID: 11,
@@ -58,7 +57,7 @@ const createJournalLine1 = async (data, journal, compte, line) => {
       Account_ID: compte.id,
       Line: line,
       C_Currency_ID: 100,
-      DateAcct: dateIso,
+      DateAcct: data.date,
       AmtAcctDr: Number(data.debit),
       AmtAcctCr: Number(data.credit),
       AmtSourceDr: Number(data.debit),

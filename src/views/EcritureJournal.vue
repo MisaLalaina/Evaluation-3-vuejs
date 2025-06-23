@@ -1,5 +1,26 @@
 <template>
-    <navbar />
+    <div class="row h-100">
+        <div class="col-2 bg-light">
+            <div class="container mt-3" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <router-link to="/balance" class="nav-link">Balance</router-link>
+                    </li>
+                    <li class="nav-item">
+                        <router-link to="/grandLivre" class="nav-link">Grand Livre</router-link>
+                    </li>
+                    <li class="nav-item">
+                        <router-link to="/dashboard" class="nav-link">Dashboard</router-link>
+                    </li>
+                    <li class="nav-item">
+                        <router-link to="/import" class="nav-link">Import</router-link>
+                    </li>
+                      <li class="nav-item">
+                        <router-link to="/Ecriture" class="nav-link">Saisie d' ecrituire</router-link>
+                    </li>
+                </ul>
+            </div>
+        </div>
     <div class="form-container">
         <h1>Formulaire Comptable</h1>
         <div class="form-group">
@@ -39,22 +60,17 @@
             {{ loading ? 'En cours...' : 'Soumettre' }}
         </button>
         <p v-if="successMessage" class="success">{{ successMessage }}</p>
-    </div>
+    </div></div>
 </template>
 
 <script>
 import compteService from '@/services/compteService.js';
 import journalService from '@/services/journalService.js';
-import apiClient from '@/services/api.js';
-import Navbar from '@/components/Navbar.vue';
-
+import apiClient from "@/services/api";
 
 
 export default {
     name: 'SaisieEcriture',
-    components: {
-        Navbar
-    },
     data() {
         return {
             form: {
