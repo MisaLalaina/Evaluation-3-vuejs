@@ -179,7 +179,7 @@ onMounted(async () => {
             <div v-for="(accountGroup, accountName) in groupedJournals" :key="accountName" class="mb-5">
                 <h2 class="mb-3">{{ accountName }}</h2>
                 <div class="table-responsive">
-                    <table class="table table-sm table-bordered table-hover table-striped">
+                    <table class="table table-sm table-hover table-striped">
                         <thead class="table-light">
                             <tr>
                                 <th>Date</th>

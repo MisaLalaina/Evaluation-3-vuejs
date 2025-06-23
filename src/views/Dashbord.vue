@@ -113,7 +113,17 @@ export default {
         maximumFractionDigits: 0
       }).format(value);
     };
-
+    const dalaClass = (data)=>{
+      let cls = "positive";
+      if (data.netResult == 0) {
+        cls = "";
+      }
+      else if(data.netResult < 0 ) {
+        cls = "negative";
+      }
+      return cls;
+    };
+    
     onMounted(() => {
       loadData();
     });
@@ -129,7 +139,8 @@ export default {
       chartCanvas,
       loadData,
       getMonthName,
-      formatCurrency
+      formatCurrency,
+      dalaClass
     };
   }
 };
@@ -172,7 +183,7 @@ export default {
         <canvas ref="chartCanvas"></canvas>
       </div>
 
-      <table v-if="!loading">
+      <table v-if="!loading" class="table table-sm">
         <thead>
           <tr>
             <th>Mois</th>
@@ -182,11 +193,11 @@ export default {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(data, index) in financialData" :key="index">
+          <tr v-for="(data, index) in financialData" :key="index" :class="{}">
             <td>{{ getMonthName(data.month) }}</td>
             <td>{{ formatCurrency(data.revenue) }}</td>
             <td>{{ formatCurrency(data.expenses) }}</td>
-            <td :class="{ positive: data.netResult > 0, negative: data.netResult < 0 }">
+            <td :class="dalaClass(data)">
               {{ formatCurrency(data.netResult) }}
             </td>
           </tr>

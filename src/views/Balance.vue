@@ -226,7 +226,7 @@ onMounted(async () => {
             <div v-if="error" class="error">{{ error }}</div>
 
             <!-- Tableau de la balance -->
-            <table v-if="Object.keys(balanceData).length" class="table table-bordered">
+            <table v-if="Object.keys(balanceData).length" class="table table-bordered table-sm">
                 <thead>
                     <tr>
                         <th>Compte</th>
