@@ -248,7 +248,7 @@ onMounted(async () => {
                         </td>
                         <td>{{ formatCurrency(account.totalDebit) }}</td>
                         <td>{{ formatCurrency(account.totalCredit) }}</td>
-                        <td>{{ formatCurrency(account.totalDebit - account.totalCredit) }}</td>
+                        <td>{{ formatCurrency(account.totalCredit - account.totalDebit) }}</td>
                     </tr>
                 </tbody>
                 <tfoot>
