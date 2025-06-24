@@ -5,6 +5,7 @@ import GrandLivre from "@/views/GrandLivre.vue";
 import Import from "@/views/Import.vue";
 import Dashbord from "@/views/Dashbord.vue";
 import EcritureJournal from "@/views/EcritureJournal.vue";
+import Compte from "@/views/Compte.vue";
 // 
 const routes = [
   {
@@ -36,7 +37,14 @@ const routes = [
   path:"/Ecriture",
   name:"EcritureJournal",
   component:EcritureJournal,
+},
+
+{
+  path:"/compte",
+  name:"Compte",
+  component:Compte,
 }
+
 
 
 ];
