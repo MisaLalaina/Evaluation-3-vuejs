@@ -87,10 +87,13 @@ const balanceData = computed(() => {
                 grouped[accountName] = {
                     totalDebit: 0,
                     totalCredit: 0,
+                    solde: 0,
                 };
             }
             grouped[accountName].totalDebit += line.AmtAcctDr || 0;
             grouped[accountName].totalCredit += line.AmtAcctCr || 0;
+            grouped[accountName].solde = grouped[accountName].totalDebit - grouped[accountName].totalCredit;
+
         });
     });
 
@@ -100,19 +103,45 @@ const balanceData = computed(() => {
     );
 });
 
+// Grouper les comptes par types
+const groupedBalanceData = computed(() => {
+    const grouped = {};
+    Object.entries(balanceData.value).forEach(([accountName, account]) => {
+        const accountType = accountName.charAt(0);
+        if (!grouped[accountType]) {
+            grouped[accountType] = {
+                data : [],
+                totalDebit: 0,
+                totalCredit: 0,
+                solde: 0,
+            };
+        }
+        grouped[accountType].data.push({ name: accountName, ...account });
+        grouped[accountType].totalDebit += account.totalDebit;
+        grouped[accountType].totalCredit += account.totalCredit;
+        grouped[accountType].solde = grouped[accountType].totalDebit - grouped[accountType].totalCredit;
+    });
+    console.log('Grouped Balance Data:', grouped);
+    
+    return grouped;
+});
+
 // Calculer les totaux généraux de la balance
 const balanceTotals = computed(() => {
     let totalDebit = 0;
     let totalCredit = 0;
+    let totalSolde = 0;
 
     Object.values(balanceData.value).forEach(account => {
         totalDebit += account.totalDebit;
         totalCredit += account.totalCredit;
+        totalSolde = totalDebit -totalCredit;
     });
 
     return {
         totalDebit,
         totalCredit,
+        totalSolde,
     };
 });
 
@@ -185,6 +214,7 @@ const runningBalances = computed(() => {
 const totalDebit = computed(() => {
     return accountLines.value.reduce((sum, line) => sum + (line.AmtAcctDr || 0), 0);
 });
+
 const totalCredit = computed(() => {
     return accountLines.value.reduce((sum, line) => sum + (line.AmtAcctCr || 0), 0);
 });
@@ -248,7 +278,7 @@ onMounted(async () => {
                         </td>
                         <td>{{ formatCurrency(account.totalDebit) }}</td>
                         <td>{{ formatCurrency(account.totalCredit) }}</td>
-                        <td>{{ formatCurrency(account.totalCredit - account.totalDebit) }}</td>
+                        <td>{{ formatCurrency(account.solde) }}</td>
                     </tr>
                 </tbody>
                 <tfoot>
@@ -256,7 +286,7 @@ onMounted(async () => {
                         <td class="text-right">Total Balance</td>
                         <td>{{ formatCurrency(balanceTotals.totalDebit) }}</td>
                         <td>{{ formatCurrency(balanceTotals.totalCredit) }}</td>
-                        <td>{{ formatCurrency(balanceTotals.totalDebit - balanceTotals.totalCredit) }}</td>
+                        <td>{{ formatCurrency(balanceTotals.totalSolde) }}</td>
                     </tr>
                 </tfoot>
             </table>
@@ -306,6 +336,36 @@ onMounted(async () => {
                     <div v-else class="no-data">Aucune transaction pour ce compte avec les filtres sélectionnés.</div>
                     
                 </div>
+            </div>
+
+            <!-- Tableau grouper -->
+            <div v-if="Object.keys(groupedBalanceData).length" class="mt-4">
+                <h2>Balance par Type de Compte</h2>
+                <table class="table table-bordered table-sm">
+                    <thead>
+                        <tr>
+                            <th>Type de Compte</th>
+                            <th>Compte</th>
+                            <th>Débit</th>
+                            <th>Crédit</th>
+                            <th>Solde</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(group, type) in groupedBalanceData" :key="type">
+                            <td rowspan="group.data.length">{{ type }}</td>
+                            <td v-for="(account, index) in group.data" :key="account.name">
+                                
+                                <span class="account-link" @click="openModal(account.name)">
+                                   {{ account.name }}
+                                </span>
+                            </td>
+                            <td>{{ formatCurrency(group.totalDebit) }}</td>
+                            <td>{{ formatCurrency(group.totalCredit) }}</td>
+                            <td>{{ formatCurrency(group.solde) }}</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
