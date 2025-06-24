@@ -232,6 +232,7 @@ onMounted(async () => {
 });
 </script>
 
+
 <template>
     <div class="row h-100">
         <div class="col-2 bg-light">
@@ -249,8 +250,8 @@ onMounted(async () => {
                     <li class="nav-item">
                         <router-link to="/import" class="nav-link">Import</router-link>
                     </li>
-                      <li class="nav-item">
-                        <router-link to="/Ecriture" class="nav-link">Saisie d' ecrituire</router-link>
+                    <li class="nav-item">
+                        <router-link to="/Ecriture" class="nav-link">Saisie d'écriture</router-link>
                     </li>
                 </ul>
             </div>
@@ -258,93 +259,33 @@ onMounted(async () => {
         <div class="col-10 p-4">
             <h1>Balance Comptable</h1>
             <div v-if="error" class="error">{{ error }}</div>
-
-            <!-- Tableau de la balance
-            <table v-if="Object.keys(balanceData).length" class="table table-bordered table-sm">
-                <thead>
-                    <tr>
-                        <th>Compte</th>
-                        <th>Débit</th>
-                        <th>Crédit</th>
-                        <th>Solde</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="(account, accountName) in balanceData" :key="accountName">
-                        <td>
-                            <span class="account-link" @click="openModal(accountName)">
-                                {{ accountName }}
-                            </span>
-                        </td>
-                        <td>{{ formatCurrency(account.totalDebit) }}</td>
-                        <td>{{ formatCurrency(account.totalCredit) }}</td>
-                        <td>{{ formatCurrency(account.solde) }}</td>
-                    </tr>
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <td class="text-right">Total Balance</td>
-                        <td>{{ formatCurrency(balanceTotals.totalDebit) }}</td>
-                        <td>{{ formatCurrency(balanceTotals.totalCredit) }}</td>
-                        <td>{{ formatCurrency(balanceTotals.totalSolde) }}</td>
-                    </tr>
-                </tfoot>
-            </table>
-            <div v-else class="no-data">Aucune donnée disponible pour les filtres sélectionnés.</div> -->
-
-            <!-- Modale pour le grand livre du compte -->
-            <div v-if="showModal" class="modal-overlay">
-                <div class="modal-content">
-                    <div class="row">
-                        <div class="col">
-                            <h2>Grand Livre : {{ selectedAccount }}</h2>
-                        </div>
-                        <div class="col-2 text-end">
-                            <button @click="closeModal" class="btn btn-danger">X</button>
-                        </div>
-                    </div>
-                    <table v-if="accountLines.length" class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Document No</th>
-                                <th>Libellé</th>
-                                <th>Débit</th>
-                                <th>Crédit</th>
-                                <th>Solde</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="(line, index) in accountLines" :key="line.id">
-                                <td>{{ formatDate(line.DateAcct) }}</td>
-                                <td>{{ line.DocumentNo }}</td>
-                                <td>{{ line.journalDescription || 'N/A' }}</td>
-                                <td>{{ formatCurrency(line.AmtAcctDr) }}</td>
-                                <td>{{ formatCurrency(line.AmtAcctCr) }}</td>
-                                <td>{{ formatCurrency(runningBalances[index]) }}</td>
-                            </tr>
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <td colspan="3" class="text-right">Total</td>
-                                <td>{{ formatCurrency(totalDebit) }}</td>
-                                <td>{{ formatCurrency(totalCredit) }}</td>
-                                <td>{{ formatCurrency(totalDebit - totalCredit) }}</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                    <div v-else class="no-data">Aucune transaction pour ce compte avec les filtres sélectionnés.</div>
-                    
+            
+            <!-- Filtres -->
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label for="dateMin" class="form-label">Date de début</label>
+                    <input type="date" class="form-control" id="dateMin" v-model="dateMin">
+                </div>
+                <div class="col-md-3">
+                    <label for="dateMax" class="form-label">Date de fin</label>
+                    <input type="date" class="form-control" id="dateMax" v-model="dateMax">
+                </div>
+                <div class="col-md-4">
+                    <label for="referenceFilter" class="form-label">Libellé/Référence</label>
+                    <input type="text" class="form-control" id="referenceFilter" v-model="referenceFilter" 
+                           placeholder="Filtrer par libellé ou référence">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-secondary" @click="resetFilters">Réinitialiser</button>
                 </div>
             </div>
 
-            <!-- Tableau grouper -->
-            <div v-if="Object.keys(groupedBalanceData).length" class="mt-4">
-                <!-- <h2>Balance par Type de Compte</h2> -->
+            <!-- Tableau de la balance -->
+            <div v-if="Object.keys(groupedBalanceData).length">
                 <table class="table table-bordered table-sm">
-                    <thead>
+                    <thead class="table-light">
                         <tr>
-                            <th>Type de Compte</th>
+                            <th>Type</th>
                             <th>Compte</th>
                             <th>Débit</th>
                             <th>Crédit</th>
@@ -352,23 +293,87 @@ onMounted(async () => {
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="(group, type) in groupedBalanceData" :key="type">
-                            <td >{{ type }}</td>
-                            <td>
-                                <ul>
-                                    <li v-for="(account, index) in group.data" :key="account.name">
-                                        <span class="account-link" @click="openModal(account.name)">
-                                            {{ account.name }}
-                                        </span>
-                                    </li>
-                                </ul>
-                            </td>
-                            <td>{{ formatCurrency(group.totalDebit) }}</td>
-                            <td>{{ formatCurrency(group.totalCredit) }}</td>
-                            <td>{{ formatCurrency(group.solde) }}</td>
-                        </tr>
+                        <template v-for="(group, type) in groupedBalanceData" :key="type">
+                            <!-- Ligne pour le type de compte -->
+                            <tr class="account-type-row">
+                                <td>{{ type }}</td>
+                                <td>Total Type {{ type }}</td>
+                                <td>{{ formatCurrency(group.totalDebit) }}</td>
+                                <td>{{ formatCurrency(group.totalCredit) }}</td>
+                                <td>{{ formatCurrency(group.solde) }}</td>
+                            </tr>
+                            
+                            <!-- Lignes pour chaque compte du type -->
+                            <tr v-for="account in group.data" :key="account.name">
+                                <td></td>
+                                <td>
+                                    <span class="account-link" @click="openModal(account.name)">
+                                        {{ account.name }}
+                                    </span>
+                                </td>
+                                <td>{{ formatCurrency(account.totalDebit) }}</td>
+                                <td>{{ formatCurrency(account.totalCredit) }}</td>
+                                <td>{{ formatCurrency(account.solde) }}</td>
+                            </tr>
+                        </template>
                     </tbody>
+                    <tfoot class="table-total">
+                        <tr>
+                            <td colspan="2" class="text-end fw-bold">TOTAL GÉNÉRAL</td>
+                            <td class="fw-bold">{{ formatCurrency(balanceTotals.totalDebit) }}</td>
+                            <td class="fw-bold">{{ formatCurrency(balanceTotals.totalCredit) }}</td>
+                            <td class="fw-bold">{{ formatCurrency(balanceTotals.totalSolde) }}</td>
+                        </tr>
+                    </tfoot>
                 </table>
+            </div>
+            <div v-else class="no-data alert alert-info">
+                Aucune donnée disponible pour les filtres sélectionnés.
+            </div>
+
+            <!-- Modale pour le grand livre du compte -->
+            <div v-if="showModal" class="modal-overlay">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title">Grand Livre : {{ selectedAccount }}</h2>
+                        <button @click="closeModal" class="btn-close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <table v-if="accountLines.length" class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Pièce</th>
+                                    <th>Libellé</th>
+                                    <th>Débit</th>
+                                    <th>Crédit</th>
+                                    <th>Solde</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(line, index) in accountLines" :key="line.id">
+                                    <td>{{ formatDate(line.DateAcct) }}</td>
+                                    <td>{{ line.DocumentNo }}</td>
+                                    <td>{{ line.journalDescription || 'N/A' }}</td>
+                                    <td>{{ formatCurrency(line.AmtAcctDr) }}</td>
+                                    <td>{{ formatCurrency(line.AmtAcctCr) }}</td>
+                                    <td>{{ formatCurrency(runningBalances[index]) }}</td>
+                                </tr>
+                            </tbody>
+                            <tfoot class="table-total">
+                                <tr>
+                                    <td colspan="3" class="text-end fw-bold">Total</td>
+                                    <td class="fw-bold">{{ formatCurrency(totalDebit) }}</td>
+                                    <td class="fw-bold">{{ formatCurrency(totalCredit) }}</td>
+                                    <td class="fw-bold">{{ formatCurrency(totalDebit - totalCredit) }}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        <div v-else class="no-data alert alert-info">
+                            Aucune transaction pour ce compte avec les filtres sélectionnés.
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
