@@ -259,7 +259,7 @@ onMounted(async () => {
             <h1>Balance Comptable</h1>
             <div v-if="error" class="error">{{ error }}</div>
 
-            <!-- Tableau de la balance -->
+            <!-- Tableau de la balance
             <table v-if="Object.keys(balanceData).length" class="table table-bordered table-sm">
                 <thead>
                     <tr>
@@ -290,7 +290,7 @@ onMounted(async () => {
                     </tr>
                 </tfoot>
             </table>
-            <div v-else class="no-data">Aucune donnée disponible pour les filtres sélectionnés.</div>
+            <div v-else class="no-data">Aucune donnée disponible pour les filtres sélectionnés.</div> -->
 
             <!-- Modale pour le grand livre du compte -->
             <div v-if="showModal" class="modal-overlay">
@@ -340,7 +340,7 @@ onMounted(async () => {
 
             <!-- Tableau grouper -->
             <div v-if="Object.keys(groupedBalanceData).length" class="mt-4">
-                <h2>Balance par Type de Compte</h2>
+                <!-- <h2>Balance par Type de Compte</h2> -->
                 <table class="table table-bordered table-sm">
                     <thead>
                         <tr>
@@ -353,12 +353,15 @@ onMounted(async () => {
                     </thead>
                     <tbody>
                         <tr v-for="(group, type) in groupedBalanceData" :key="type">
-                            <td rowspan="group.data.length">{{ type }}</td>
-                            <td v-for="(account, index) in group.data" :key="account.name">
-                                
-                                <span class="account-link" @click="openModal(account.name)">
-                                   {{ account.name }}
-                                </span>
+                            <td >{{ type }}</td>
+                            <td>
+                                <ul>
+                                    <li v-for="(account, index) in group.data" :key="account.name">
+                                        <span class="account-link" @click="openModal(account.name)">
+                                            {{ account.name }}
+                                        </span>
+                                    </li>
+                                </ul>
                             </td>
                             <td>{{ formatCurrency(group.totalDebit) }}</td>
                             <td>{{ formatCurrency(group.totalCredit) }}</td>
