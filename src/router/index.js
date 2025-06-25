@@ -42,7 +42,7 @@ const routes = [
 },
 
 {
-  path:"/compte",
+  path:"/compte", //liste compte
   name:"Compte",
   component:Compte,
 },
