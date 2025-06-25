@@ -127,7 +127,18 @@ const groupedBalanceData = computed(() => {
   });
   return grouped;
 });
+const openSections = ref({});
 
+const isSectionOpen = (type) => {
+  return openSections.value[type] !== false; // Ouvert par défaut
+};
+
+const toggleSection = (type) => {
+  openSections.value = {
+    ...openSections.value,
+    [type]: !isSectionOpen(type)
+  };
+};
 // Calculer les totaux généraux de la balance
 const balanceTotals = computed(() => {
   let totalDebit = 0;
@@ -378,63 +389,80 @@ onMounted(async () => {
         </div>
       </div>
 
-      <!-- Tableau de la balance -->
-      <div v-if="Object.keys(groupedBalanceData).length">
-        <table class="table table-bordered table-sm">
-          <thead class="table-light">
-            <tr>
-              <th>Type</th>
-              <th>Compte</th>
-              <th>Débit</th>
-              <th>Crédit</th>
-              <th>Solde</th>
-            </tr>
-          </thead>
-          <tbody>
-            <template v-for="(group, type) in groupedBalanceData" :key="type">
-              <!-- Ligne pour le type de compte -->
-              <tr class="account-type-row">
-                <td>{{ type }}</td>
-                <td>Total Type {{ type }}</td>
-                <td>{{ formatCurrency(group.totalDebit) }}</td>
-                <td>{{ formatCurrency(group.totalCredit) }}</td>
-                <td>{{ formatCurrency(group.solde) }}</td>
-              </tr>
-              
-              <!-- Lignes pour chaque compte du type -->
-              <tr v-for="account in group.data" :key="account.name">
-                <td></td>
-                <td>
-                  <span class="account-link" @click="openModal(account.name)">
-                    {{ account.name }}
-                  </span>
-                </td>
-                <td>{{ formatCurrency(account.totalDebit) }}</td>
-                <td>{{ formatCurrency(account.totalCredit) }}</td>
-                <td>{{ formatCurrency(account.solde) }}</td>
-              </tr>
-            </template>
-          </tbody>
-          <tfoot class="table-total">
-            <tr>
-              <td colspan="2" class="text-end fw-bold">TOTAL GÉNÉRAL</td>
-              <td class="fw-bold">{{ formatCurrency(balanceTotals.totalDebit) }}</td>
-              <td class="fw-bold">{{ formatCurrency(balanceTotals.totalCredit) }}</td>
-              <td class="fw-bold">{{ formatCurrency(balanceTotals.totalSolde) }}</td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-      <div v-else class="no-data alert alert-info">
-        Aucune donnée disponible pour les filtres sélectionnés.
-      </div>
+<!-- Tableau de la balance -->
+<div v-if="Object.keys(groupedBalanceData).length" class="balance-container">
+  <div v-for="(group, type) in groupedBalanceData" :key="type" class="balance-section">
+    <!-- En-tête de section -->
+    <div class="section-header">
+      <h3 class="section-title">
+        Type - {{ type }}
+      </h3>
+    </div>
+
+    <!-- Contenu de section (pliable) -->
+    <div v-show="isSectionOpen(type)" class="section-content">
+      <table class="table table-bordered table-sm account-table">
+        <thead class="table-light">
+          <tr>
+            <th>Compte</th>
+            <th>Débit</th>
+            <th>Crédit</th>
+            <th>Solde</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="account in group.data" :key="account.name" class="account-row">
+            <td class="account-name">
+              <span class="account-link" @click="openModal(account.name)">
+                {{ account.name }}
+              </span>
+            </td>
+            <td>{{ formatCurrency(account.totalDebit) }}</td>
+            <td>{{ formatCurrency(account.totalCredit) }}</td>
+            <td :class="{'text-danger': account.solde < 0, 'text-success': account.solde >= 0}">
+              {{ formatCurrency(account.solde) }}
+            </td>
+          </tr>
+        </tbody>
+        <tfoot class="table-secondary">
+          <tr>
+            <td class="text-end fw-bold">Total - {{ type }}</td>
+            <td class="fw-bold">{{ formatCurrency(group.totalDebit) }}</td>
+            <td class="fw-bold">{{ formatCurrency(group.totalCredit) }}</td>
+            <td class="fw-bold">{{ formatCurrency(group.solde) }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- Total général -->
+  <div class="grand-total">
+    <table class="table table-bordered">
+      <tfoot class="table-total">
+        <tr>
+          <td colspan="2" class="text-end fw-bold">TOTAL GÉNÉRAL</td>
+          <td class="fw-bold">{{ formatCurrency(balanceTotals.totalDebit) }}</td>
+          <td class="fw-bold">{{ formatCurrency(balanceTotals.totalCredit) }}</td>
+          <td class="fw-bold">{{ formatCurrency(balanceTotals.totalSolde) }}</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+
+<div v-else class="no-data alert alert-info">
+  Aucune donnée disponible pour les filtres sélectionnés.
+</div>
 
       <!-- Modale pour le grand livre du compte -->
       <div v-if="showModal" class="modal-overlay">
         <div class="modal-content">
           <div class="modal-header">
             <h2 class="modal-title">Grand Livre : {{ selectedAccount }}</h2>
-            <button @click="closeModal" class="btn-close"></button>
+            <button @click="closeModal" class="btn-close">
+              x
+            </button>
           </div>
           <div class="modal-body">
             <!-- Graphique d'évolution -->
