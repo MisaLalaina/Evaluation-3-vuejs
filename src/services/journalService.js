@@ -1,11 +1,11 @@
 import apiClient from "./api";
 
+// Récupérer tous les journaux avec leurs lignes
 const getGrandLivre = async () => {
   try {
     const response = await apiClient.get(
       `/models/GL_Journal?$filter=GL_Category_ID%20eq%201000000&$expand=GL_JournalLine`
     );
-    // console.log('Réponse API:', response.records);
     return response.records;
   } catch (error) {
     console.error(
@@ -16,12 +16,12 @@ const getGrandLivre = async () => {
   }
 };
 
+// Créer un nouveau journal
 const createJournal = async (data) => {
   try {
     const dateIso = data.date.replace(" ", "T");
     const c_p_id = await findPeriodId(dateIso);
 
-    // if (c_p_id !== null && c_p_id !== undefined) {
     const journal = {
       AD_Client_ID: 11,
       AD_Org_ID: 11,
@@ -38,7 +38,6 @@ const createJournal = async (data) => {
 
     const response = await apiClient.post("/models/GL_Journal", journal);
     return response;
-    // }
   } catch (error) {
     console.error("Erreur lors de la création du journal :", {
       error: error.message,
@@ -47,7 +46,8 @@ const createJournal = async (data) => {
     throw new Error(`Échec de la création du journal : ${error.message}`);
   }
 };
-// mamorona journaline ho an' ilay formulaire d' insertion
+
+// Créer une ligne de journal (version simplifiée)
 const createJournalLine1 = async (data, journal, compte, line) => {
   try {
     const journalline = {
@@ -70,7 +70,6 @@ const createJournalLine1 = async (data, journal, compte, line) => {
       "/models/GL_JournalLine",
       journalline
     );
-    // console.log('Journal Line created:', response);
     return response;
   } catch (error) {
     console.error("Erreur lors de la création du journal Line :", {
@@ -80,7 +79,8 @@ const createJournalLine1 = async (data, journal, compte, line) => {
     throw new Error(`Échec de la création du journal Line : ${error.message}`);
   }
 };
-// mamorona journaline
+
+// Créer une ligne de journal (version complète)
 const createJournalLine = async (data, journal, compte, line) => {
   try {
     const dateIso = data.date.replace(" ", "T");
@@ -106,7 +106,6 @@ const createJournalLine = async (data, journal, compte, line) => {
       "/models/GL_JournalLine",
       journalline
     );
-    // console.log('Journal Line created:', response);
     return response;
   } catch (error) {
     console.error("Erreur lors de la création du journal Line :", {
@@ -117,6 +116,7 @@ const createJournalLine = async (data, journal, compte, line) => {
   }
 };
 
+// Trouver l'ID de période pour une date donnée
 const findPeriodId = async (date) => {
   const isoDate = new Date(date).toISOString().split(".")[0];
   const response = await apiClient.get(`/models/C_Period`, {
@@ -125,15 +125,14 @@ const findPeriodId = async (date) => {
     },
   });
 
-  // console.log(response)
-
   if (response.records && response.records.length > 0) {
-    return response.records[0].id; // ou .C_Period_ID selon ta structure
+    return response.records[0].id;
   }
 
   throw new Error(`Aucune période active ouverte trouvée pour la date ${date}`);
 };
 
+// Vérifier si un journal existe déjà
 const journalExist = async (value) => {
   try {
     const response = await apiClient.get(
@@ -142,10 +141,37 @@ const journalExist = async (value) => {
     return response.records || [];
   } catch (error) {
     console.error("Erreur lors de la vérification du journal :", error);
-    return []; // retourne toujours un tableau pour éviter les erreurs
+    return [];
   }
 };
 
+// Supprimer un journal
+const deleteJournal = async (journalId) => {
+  try {
+    // D'abord vérifier si le journal peut être supprimé
+    const journal = await apiClient.get(`/models/GL_Journal/${journalId}?$expand=GL_JournalLine`);
+    
+    if (journal.DocStatus !== 'DR') {
+      throw new Error("Seuls les journaux au statut 'Brouillon' peuvent être supprimés");
+    }
+    
+    if (journal.GL_JournalLine && journal.GL_JournalLine.length > 0) {
+      throw new Error("Impossible de supprimer un journal avec des lignes associées");
+    }
+
+    // Si les vérifications passent, procéder à la suppression
+    const response = await apiClient.delete(`/models/GL_Journal/${journalId}`);
+    return response;
+  } catch (error) {
+    console.error("Erreur lors de la suppression du journal:", {
+      error: error.message,
+      stack: error.stack,
+    });
+    throw new Error(`Échec de la suppression du journal : ${error.message}`);
+  }
+};
+
+// Exporter toutes les méthodes
 export default {
   getGrandLivre,
   createJournal,
@@ -153,4 +179,5 @@ export default {
   journalExist,
   findPeriodId,
   createJournalLine,
+  deleteJournal
 };

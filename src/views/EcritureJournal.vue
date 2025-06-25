@@ -1,66 +1,69 @@
 <template>
-     <div class="container mt-3" id="navbarNav">
+    <div class="row h-100">
+        <div class="col-2 bg-light">
+            <div class="container mt-3" id="navbarNav">
                 <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <router-link to="/balance" class="nav-link">Balance</router-link>
-                    </li>
-                    <li class="nav-item">
-                        <router-link to="/grandLivre" class="nav-link">Grand Livre</router-link>
-                    </li>
-                    <li class="nav-item">
-                        <router-link to="/dashboard" class="nav-link">Dashboard</router-link>
-                    </li>
-                    <li class="nav-item">
-                        <router-link to="/import" class="nav-link">Import</router-link>
-                    </li>
-                      <li class="nav-item">
-                        <router-link to="/Ecriture" class="nav-link">Saisie d' ecrituire</router-link>
-                    </li>
+                <li class="nav-item">
+                    <router-link to="/balance" class="nav-link">Balance</router-link>
+                </li>
+                <li class="nav-item">
+                    <router-link to="/grandLivre" class="nav-link">Grand Livre</router-link>
+                </li>
+                <li class="nav-item">
+                    <router-link to="/dashboard" class="nav-link">Dashboard</router-link>
+                </li>
+                <li class="nav-item">
+                    <router-link to="/import" class="nav-link">Import</router-link>
+                </li>
+                <li class="nav-item">
+                    <router-link to="/Ecriture" class="nav-link">Saisie d'écriture</router-link>
+                </li>
                 </ul>
             </div>
-    <div class="row h-100">
-        <div class="col-2 bg-light">     
         </div>
-    <div class="form-container">
-        <h1>Formulaire Comptable</h1>
-        <div class="form-group">
-            <label for="compte">Compte <span class="required">*</span></label>
-            <select v-model="form.compte" id="compte" :disabled="loading" @change="clearError('compte')">
-                <option value="" disabled>Sélectionnez un compte</option>
-                <option v-for="compte in comptes" :key="compte.C_ElementValue_ID || compte.id" :value="compte">
-                    {{ compte.Value || 'N/A' }} - {{ compte.Name || 'Sans nom' }}
-                </option>
-            </select>
-            <span class="error" v-if="errors.compte">{{ errors.compte }}</span>
+        <div class="col-10 p-4">
+            <div class="form-container">
+                <h1>Formulaire Comptable</h1>
+                <div class="form-group">
+                    <label for="compte">Compte <span class="required">*</span></label>
+                    <select v-model="form.compte" id="compte" :disabled="loading" @change="clearError('compte')">
+                        <option value="" disabled>Sélectionnez un compte</option>
+                        <option v-for="compte in comptes" :key="compte.C_ElementValue_ID || compte.id" :value="compte">
+                            {{ compte.Value || 'N/A' }} - {{ compte.Name || 'Sans nom' }}
+                        </option>
+                    </select>
+                    <span class="error" v-if="errors.compte">{{ errors.compte }}</span>
+                </div>
+                <div class="form-group">
+                    <label for="date">Date <span class="required">*</span></label>
+                    <input v-model="form.date" type="date" id="date" :disabled="loading" @input="clearError('date')">
+                    <span class="error" v-if="errors.date">{{ errors.date }}</span>
+                </div>
+                <div class="form-group">
+                    <label for="reference">Référence <span class="required">*</span></label>
+                    <input v-model="form.reference" type="text" id="reference" :disabled="loading"
+                        @input="clearError('reference')">
+                    <span class="error" v-if="errors.reference">{{ errors.reference }}</span>
+                </div>
+                <div class="form-group">
+                    <label for="debit">Débit</label>
+                    <input v-model.number="form.debit" type="number" id="debit" step="0.01" min="0" :disabled="loading"
+                        @input="clearError('amount')">
+                    <span class="error" v-if="errors.amount">{{ errors.amount }}</span>
+                </div>
+                <div class="form-group">
+                    <label for="credit">Crédit</label>
+                    <input v-model.number="form.credit" type="number" id="credit" step="0.01" min="0" :disabled="loading"
+                        @input="clearError('amount')">
+                    <span class="error" v-if="errors.amount">{{ errors.amount }}</span>
+                </div>
+                <button @click="submitForm" :disabled="loading || !isFormValid">
+                    {{ loading ? 'En cours...' : 'Soumettre' }}
+                </button>
+                <p v-if="successMessage" class="success">{{ successMessage }}</p>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="date">Date <span class="required">*</span></label>
-            <input v-model="form.date" type="date" id="date" :disabled="loading" @input="clearError('date')">
-            <span class="error" v-if="errors.date">{{ errors.date }}</span>
-        </div>
-        <div class="form-group">
-            <label for="reference">Référence <span class="required">*</span></label>
-            <input v-model="form.reference" type="text" id="reference" :disabled="loading"
-                @input="clearError('reference')">
-            <span class="error" v-if="errors.reference">{{ errors.reference }}</span>
-        </div>
-        <div class="form-group">
-            <label for="debit">Débit</label>
-            <input v-model.number="form.debit" type="number" id="debit" step="0.01" min="0" :disabled="loading"
-                @input="clearError('amount')">
-            <span class="error" v-if="errors.amount">{{ errors.amount }}</span>
-        </div>
-        <div class="form-group">
-            <label for="credit">Crédit</label>
-            <input v-model.number="form.credit" type="number" id="credit" step="0.01" min="0" :disabled="loading"
-                @input="clearError('amount')">
-            <span class="error" v-if="errors.amount">{{ errors.amount }}</span>
-        </div>
-        <button @click="submitForm" :disabled="loading || !isFormValid">
-            {{ loading ? 'En cours...' : 'Soumettre' }}
-        </button>
-        <p v-if="successMessage" class="success">{{ successMessage }}</p>
-    </div></div>
+    </div>
 </template>
 
 <script>

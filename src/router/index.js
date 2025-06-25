@@ -6,7 +6,8 @@ import Import from "@/views/Import.vue";
 import Dashbord from "@/views/Dashbord.vue";
 import EcritureJournal from "@/views/EcritureJournal.vue";
 import Compte from "@/views/Compte.vue";
-import ListeEcriture from "@/views/ListeEcriture.vue"
+import ListeEcriture from "@/views/ListeEcriture.vue";
+import JournalListe from "@/views/JournalListe.vue";
 // 
 const routes = [
   {
@@ -50,6 +51,11 @@ const routes = [
   path:"/journlecriture",
   name:"Journlecriture",
   component:ListeEcriture,
+},
+{
+  path:"/journl",
+  name:"JournalListe",
+  component:JournalListe,
 }
 
 
