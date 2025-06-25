@@ -8,6 +8,8 @@ const error = ref(null);
 const dateMin = ref(null);
 const dateMax = ref(null);
 const referenceFilter = ref('');
+const minAmount = ref(null);
+const maxAmount = ref(null);
 const showModal = ref(false);
 const selectedAccount = ref(null);
 const chartInstance = ref(null);
@@ -36,6 +38,8 @@ const resetFilters = () => {
   dateMin.value = null;
   dateMax.value = null;
   referenceFilter.value = '';
+  minAmount.value = null;
+  maxAmount.value = null;
 };
 
 // Ouvrir la modale
@@ -87,6 +91,11 @@ const balanceData = computed(() => {
   // Regrouper par compte
   filteredJournals.forEach(journal => {
     (journal.GL_JournalLine || []).forEach(line => {
+      // Filtre par montant
+      const lineAmount = Math.max(line.AmtAcctDr || 0, line.AmtAcctCr || 0);
+      if (minAmount.value && lineAmount < minAmount.value) return;
+      if (maxAmount.value && lineAmount > maxAmount.value) return;
+
       const accountName = line.Account_ID?.identifier || 'Compte inconnu';
       if (!grouped[accountName]) {
         grouped[accountName] = {
@@ -193,6 +202,10 @@ const accountLines = computed(() => {
   filteredJournals.forEach(journal => {
     (journal.GL_JournalLine || []).forEach(line => {
       if (line.Account_ID?.identifier === selectedAccount.value) {
+        const lineAmount = Math.max(line.AmtAcctDr || 0, line.AmtAcctCr || 0);
+        if (minAmount.value && lineAmount < minAmount.value) return;
+        if (maxAmount.value && lineAmount > maxAmount.value) return;
+        
         lines.push({
           ...line,
           journalDescription: journal.Description || 'N/A',
@@ -371,89 +384,99 @@ onMounted(async () => {
       
       <!-- Filtres -->
       <div class="row mb-3">
-        <div class="col-md-3">
+        <div class="col-md-2">
           <label for="dateMin" class="form-label">Date de début</label>
           <input type="date" class="form-control" id="dateMin" v-model="dateMin">
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
           <label for="dateMax" class="form-label">Date de fin</label>
           <input type="date" class="form-control" id="dateMax" v-model="dateMax">
         </div>
-        <div class="col-md-4">
+        <div class="col-md-2">
           <label for="referenceFilter" class="form-label">Libellé/Référence</label>
           <input type="text" class="form-control" id="referenceFilter" v-model="referenceFilter" 
                  placeholder="Filtrer par libellé ou référence">
+        </div>
+        <div class="col-md-2">
+          <label for="minAmount" class="form-label">Montant min (MGA)</label>
+          <input type="number" class="form-control" id="minAmount" v-model="minAmount" 
+                 placeholder="Montant minimum">
+        </div>
+        <div class="col-md-2">
+          <label for="maxAmount" class="form-label">Montant max (MGA)</label>
+          <input type="number" class="form-control" id="maxAmount" v-model="maxAmount" 
+                 placeholder="Montant maximum">
         </div>
         <div class="col-md-2 d-flex align-items-end">
           <button class="btn btn-secondary" @click="resetFilters">Réinitialiser</button>
         </div>
       </div>
 
-<!-- Tableau de la balance -->
-<div v-if="Object.keys(groupedBalanceData).length" class="balance-container">
-  <div v-for="(group, type) in groupedBalanceData" :key="type" class="balance-section">
-    <!-- En-tête de section -->
-    <div class="section-header">
-      <h3 class="section-title">
-        Type - {{ type }}
-      </h3>
-    </div>
+      <!-- Tableau de la balance -->
+      <div v-if="Object.keys(groupedBalanceData).length" class="balance-container">
+        <div v-for="(group, type) in groupedBalanceData" :key="type" class="balance-section">
+          <!-- En-tête de section -->
+          <div class="section-header">
+            <h3 class="section-title">
+              Type - {{ type }}
+            </h3>
+          </div>
 
-    <!-- Contenu de section (pliable) -->
-    <div v-show="isSectionOpen(type)" class="section-content">
-      <table class="table table-bordered table-sm account-table">
-        <thead class="table-light">
-          <tr>
-            <th>Compte</th>
-            <th>Débit</th>
-            <th>Crédit</th>
-            <th>Solde</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="account in group.data" :key="account.name" class="account-row">
-            <td class="account-name">
-              <span class="account-link" @click="openModal(account.name)">
-                {{ account.name }}
-              </span>
-            </td>
-            <td>{{ formatCurrency(account.totalDebit) }}</td>
-            <td>{{ formatCurrency(account.totalCredit) }}</td>
-            <td :class="{'text-danger': account.solde < 0, 'text-success': account.solde >= 0}">
-              {{ formatCurrency(account.solde) }}
-            </td>
-          </tr>
-        </tbody>
-        <tfoot class="table-secondary">
-          <tr>
-            <td class="text-end fw-bold">Total - {{ type }}</td>
-            <td class="fw-bold">{{ formatCurrency(group.totalDebit) }}</td>
-            <td class="fw-bold">{{ formatCurrency(group.totalCredit) }}</td>
-            <td class="fw-bold">{{ formatCurrency(group.solde) }}</td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
-  </div>
+          <!-- Contenu de section (pliable) -->
+          <div v-show="isSectionOpen(type)" class="section-content">
+            <table class="table table-bordered table-sm account-table">
+              <thead class="table-light">
+                <tr>
+                  <th>Compte</th>
+                  <th>Débit</th>
+                  <th>Crédit</th>
+                  <th>Solde</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="account in group.data" :key="account.name" class="account-row">
+                  <td class="account-name">
+                    <span class="account-link" @click="openModal(account.name)">
+                      {{ account.name }}
+                    </span>
+                  </td>
+                  <td>{{ formatCurrency(account.totalDebit) }}</td>
+                  <td>{{ formatCurrency(account.totalCredit) }}</td>
+                  <td :class="{'text-danger': account.solde < 0, 'text-success': account.solde >= 0}">
+                    {{ formatCurrency(account.solde) }}
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot class="table-secondary">
+                <tr>
+                  <td class="text-end fw-bold">Total - {{ type }}</td>
+                  <td class="fw-bold">{{ formatCurrency(group.totalDebit) }}</td>
+                  <td class="fw-bold">{{ formatCurrency(group.totalCredit) }}</td>
+                  <td class="fw-bold">{{ formatCurrency(group.solde) }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
 
-  <!-- Total général -->
-  <div class="grand-total">
-    <table class="table table-bordered">
-      <tfoot class="table-total">
-        <tr>
-          <td colspan="2" class="text-end fw-bold">TOTAL GÉNÉRAL</td>
-          <td class="fw-bold">{{ formatCurrency(balanceTotals.totalDebit) }}</td>
-          <td class="fw-bold">{{ formatCurrency(balanceTotals.totalCredit) }}</td>
-          <td class="fw-bold">{{ formatCurrency(balanceTotals.totalSolde) }}</td>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
-</div>
+        <!-- Total général -->
+        <div class="grand-total">
+          <table class="table table-bordered">
+            <tfoot class="table-total">
+              <tr>
+                <td colspan="2" class="text-end fw-bold">TOTAL GÉNÉRAL</td>
+                <td class="fw-bold">{{ formatCurrency(balanceTotals.totalDebit) }}</td>
+                <td class="fw-bold">{{ formatCurrency(balanceTotals.totalCredit) }}</td>
+                <td class="fw-bold">{{ formatCurrency(balanceTotals.totalSolde) }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
 
-<div v-else class="no-data alert alert-info">
-  Aucune donnée disponible pour les filtres sélectionnés.
-</div>
+      <div v-else class="no-data alert alert-info">
+        Aucune donnée disponible pour les filtres sélectionnés.
+      </div>
 
       <!-- Modale pour le grand livre du compte -->
       <div v-if="showModal" class="modal-overlay">
@@ -689,5 +712,66 @@ tfoot {
   .modal-title {
     font-size: 1.2rem;
   }
+}
+
+.balance-section {
+  margin-bottom: 20px;
+  border: 1px solid #dee2e6;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.section-header {
+  background-color: #f8f9fa;
+  padding: 10px 15px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #495057;
+}
+
+.section-content {
+  background-color: white;
+}
+
+.account-table {
+  margin-bottom: 0;
+}
+
+.account-row:hover {
+  background-color: #f8f9fa;
+}
+
+.grand-total {
+  margin-top: 30px;
+}
+
+.form-label {
+  font-weight: 500;
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
+}
+
+.form-control {
+  font-size: 0.9rem;
+  padding: 0.375rem 0.75rem;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  border-color: #6c757d;
+  font-size: 0.9rem;
+  padding: 0.375rem 0.75rem;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+  border-color: #545b62;
 }
 </style>
