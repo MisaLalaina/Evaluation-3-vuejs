@@ -1,7 +1,5 @@
 <template>
-    <div class="row h-100">
-        <div class="col-2 bg-light">
-            <div class="container mt-3" id="navbarNav">
+     <div class="container mt-3" id="navbarNav">
                 <ul class="navbar-nav">
                     <li class="nav-item">
                         <router-link to="/balance" class="nav-link">Balance</router-link>
@@ -20,6 +18,8 @@
                     </li>
                 </ul>
             </div>
+    <div class="row h-100">
+        <div class="col-2 bg-light">     
         </div>
     <div class="form-container">
         <h1>Formulaire Comptable</h1>

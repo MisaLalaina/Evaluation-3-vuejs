@@ -6,6 +6,7 @@ import Import from "@/views/Import.vue";
 import Dashbord from "@/views/Dashbord.vue";
 import EcritureJournal from "@/views/EcritureJournal.vue";
 import Compte from "@/views/Compte.vue";
+import ListeEcriture from "@/views/ListeEcriture.vue"
 // 
 const routes = [
   {
@@ -43,6 +44,12 @@ const routes = [
   path:"/compte",
   name:"Compte",
   component:Compte,
+},
+
+{
+  path:"/journlecriture",
+  name:"Journlecriture",
+  component:ListeEcriture,
 }
 
 

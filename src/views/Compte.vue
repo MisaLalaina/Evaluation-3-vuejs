@@ -170,6 +170,7 @@ onMounted(() => {
 </script>
 <template>
   <div class="compte-list-container">
+    
     <div class="header">
       <h1>Gestion des Comptes Comptables</h1>
       <p>Créez et gérez votre plan comptable</p>
